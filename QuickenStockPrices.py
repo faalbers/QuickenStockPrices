@@ -6,6 +6,8 @@ ts = TimeSeries(key='5I186NCN3TF27H5P', output_format='csv')
 file = open('QuickenExport.QIF')
 qif = QifParser.parse(file)
 
+print("Parsed")
+
 quotes = set()
 for price in qif.get_prices():
     quotes.add(price.name)
