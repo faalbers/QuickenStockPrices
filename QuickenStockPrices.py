@@ -1,3 +1,7 @@
+import sys
+from os.path import dirname
+sys.path.append(dirname(__file__))
+
 from qifparse.parser import QifParser
 from alpha_vantage.timeseries import TimeSeries
 import time
@@ -12,6 +16,8 @@ quotes = set()
 for price in qif.get_prices():
     quotes.add(price.name)
 
+print(quotes)
+
 newquotes = {}
 outstring = ""
 for quote in quotes:
@@ -19,7 +25,7 @@ for quote in quotes:
     data = list(data)
     if len(data) == 2:
         price = float(list(data)[1][4])
-        print(quote)
+        #print(quote)
         outstring += "%s, %.3f\n" % (quote, price)
     # unpayed acces to apha vantage needs 12 seconds between every parse
     time.sleep(12)
