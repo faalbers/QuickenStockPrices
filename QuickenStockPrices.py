@@ -1,34 +1,32 @@
-import sys
-from os.path import dirname
-sys.path.append(dirname(__file__))
+import pandas as pd
+import yfinance as yf
 
-from qifparse.parser import QifParser
-from alpha_vantage.timeseries import TimeSeries
-import time
+importFile = open('Z:\\Quicken\\QuickenExport.QIF')
 
-ts = TimeSeries(key='5I186NCN3TF27H5P', output_format='csv')
-file = open('QuickenExport.QIF')
-qif = QifParser.parse(file)
-
-print("Parsed it ...")
-
+isSecurity = False
+isQuote = False
 quotes = set()
-for price in qif.get_prices():
-    quotes.add(price.name)
+for line in importFile.readlines():
+    if isQuote:
+        quotes.add(line.strip()[1:])
+        isSecurity = False
+        isQuote = False
+    elif isSecurity:
+        isQuote = True
+    elif line.startswith('!Type:Security'):
+        isSecurity = True
+importFile.close()
 
-print(quotes)
-
-newquotes = {}
-outstring = ""
+qPrices = {}
 for quote in quotes:
-    data, meta_data = ts.get_quote_endpoint(quote)
-    data = list(data)
-    if len(data) == 2:
-        price = float(list(data)[1][4])
-        #print(quote)
-        outstring += "%s, %.3f\n" % (quote, price)
-    # unpayed acces to apha vantage needs 12 seconds between every parse
-    time.sleep(12)
-outfile = open('LatestStockPrices.csv', 'w')
-outfile.write(outstring)
-file.close()
+    if quote == 'Cash':
+        continue
+    data = yf.download(quote, period='5d')
+    if data['Close'].size > 0:
+        qPrices[quote] = data['Close'][data['Close'].size-1]
+
+exportFile = open('Z:\\Quicken\\QuickenImport.csv', 'w')
+for qPrice in qPrices:
+    exportFile.write('%s, %.3f\n' % (qPrice, qPrices[qPrice]))
+    #print('%s, %.3f' % (qPrice, qPrices[qPrice]))
+exportFile.close()
